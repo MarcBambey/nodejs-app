@@ -26,6 +26,117 @@ app.use(nocache());
 app.use(express.static(root));
 app.use(bodyParser.json());
 
+var pgp = require('pg-promise')(/*options*/);
+
+var cn = {
+    host: 'localhost',
+    port: 5432,
+    database: 'postgres',
+    user: 'postgres',
+    password: 'root'
+};
+let id = 109;
+
+var db = pgp(cn);
+
+//example query
+db.query('SELECT * from feedback where eventid = ' + id)
+    .then(result => {
+        console.log(result);
+        console.log(result[0].id);
+    })
+    .catch(error => {
+        console.log(error);
+    });
+let test = {
+    "id": 130
+}
+
+
+/*db.none('INSERT INTO feedback(id,eventname) VALUES($1,$2)', [188,'niceEvent9000'])
+.then(() => {
+    console.log("success");
+})
+.catch(error => {
+    console.log(error);
+});
+*/
+
+app.post('/addComment', (req, res) => {
+    console.log(req.body.comment);
+    db.none('INSERT into feedback(eventid,eventname,comment,rating,timestamp) VALUES($1,$2,$3,$4,$5)', [req.body.eventid, req.body.eventname, req.body.comment, req.body.rating, req.body.timestamp])
+        .then(() => {
+            console.log('Successfully added Commment')
+            res.status(200).send({
+                'Success': 'Added Comment Successfully'
+            })
+        })
+        .catch(error => {
+            console.log(error);
+            res.status(500).send({
+                'failed': 'Error occured'
+            })
+        })
+});
+
+app.post('/removeComment', (req, res) => {
+    console.log(req.body.id);
+    db.none('DELETE from feedback WHERE id = $1', [req.body.id])
+        .then(() => {
+            console.log("Successfully removed the comment with id: " + req.body.id);
+            res.status(200).send({
+                'success': 'Deleted Feedback'
+            })
+        })
+        .catch(error => {
+            console.log(error);
+            res.status(500).send({
+                'failed': 'Error occured for this deletion'
+            })
+        })
+})
+
+app.post('/getComment', (req, res) => {
+    db.any('SELECT * FROM feedback where eventid =$1 AND eventname = $2', [req.body.eventid, req.body.eventname])
+        .then(function (data) {
+            console.log(req.body.eventid);
+            console.log(req.body.eventname);
+            console.log(data);
+            if (data.length > 0)
+                res.status(200).send(data);
+            else {
+                res.status(404).send({
+                    'failed': 'No matching comments'
+                })
+            }
+        })
+        .catch(error => {
+            res.status(500).send({
+                'failed': 'Error occured while fetching'
+            })
+        })
+})
+
+//Work in progress
+app.post('/updateComment', (req, res) => {
+    let string = 'UPDATE feedback SET '
+    let eventid = req.body.eventid;
+    let rating = req.body.rating;
+    let eventname = req.body.eventname;
+    let comment = req.body.comment;
+    let timestamp = req.body.comment;
+    let variables;
+    if (eventid !== undefined) {
+        string += 'eventid=$1,'
+        variables.push(req.body.eventid);
+    }
+})
+
+
+
+
+
+
 // DIAGNOSTICS
 app.get('/api/event', function (req, res) {
     res.json(currentEvent);
@@ -35,17 +146,17 @@ app.get('/say-hello', function (req, res) {
     res.send('Hello World!');
 });
 
-app.get('/whattimeisit', function(req, res) {
+app.get('/whattimeisit', function (req, res) {
     res.send(new Date(Date.now()).toString());
 });
 
 // REMOTE SCHEDULER
-app.get('/schedule/:year/:month/:day/:hour/:min/:sec/:title/:msg/:type', function(req, res) {
-    scheduler.schedule(req.params.year, req.params.month, req.params.day, req.params.hour, req.params.min, req.params.sec, () => push(req.params.title, req.params.msg, req.params.type)); 
+app.get('/schedule/:year/:month/:day/:hour/:min/:sec/:title/:msg/:type', function (req, res) {
+    scheduler.schedule(req.params.year, req.params.month, req.params.day, req.params.hour, req.params.min, req.params.sec, () => push(req.params.title, req.params.msg, req.params.type));
     res.send('Task scheduled');
 });
 
-app.use(fallback('index.html', {root: root}));
+app.use(fallback('index.html', { root: root }));
 
 // PUSH NOTIFICATION
 app.post('/push/:title/:msg/:type', (req, res) => {
@@ -57,7 +168,7 @@ app.post('/push/:title/:msg/:type', (req, res) => {
 });
 
 // SUBSCRIBERS
-app.post('/registerSubscription', (req, res) => { 
+app.post('/registerSubscription', (req, res) => {
     getAllSubscriptions().then((data) => {
         let subscriptions = data;
         if (!checkSubscription(subscriptions, req.body)) {
@@ -66,12 +177,12 @@ app.post('/registerSubscription', (req, res) => {
         }
         return;
     })
-    .then(() => {
-        res.status(200).send({success: true});
-    })
-    .catch(() => {
-        res.sendStatus(500);
-    });
+        .then(() => {
+            res.status(200).send({ success: true });
+        })
+        .catch(() => {
+            res.sendStatus(500);
+        });
 });
 
 app.post('/unregisterSubscription', (req, res) => {
@@ -82,20 +193,20 @@ app.post('/unregisterSubscription', (req, res) => {
         subscriptions = subscriptions.filter(el => el.endpoint !== subscriptionObject.endpoint);
         return saveSubscription(subscriptions);
     }).then(() => {
-        res.status(200).send({success: true});
+        res.status(200).send({ success: true });
     })
-    .catch(() => {
-        res.sendStatus(500);
-    });
+        .catch(() => {
+            res.sendStatus(500);
+        });
 });
 
 // PRIVATE METHODS
 function getAllSubscriptions() {
-    return new Promise((resolve, reject) => { 
+    return new Promise((resolve, reject) => {
         file.readFile(subscriptionsFile, (err, data) => {
             let result;
             if (!err) {
-                result = data && data.length > 0 ? JSON.parse(data) : [];            
+                result = data && data.length > 0 ? JSON.parse(data) : [];
             } else {
                 result = [];
             }
@@ -107,56 +218,56 @@ function getAllSubscriptions() {
 
 function saveSubscription(subscriptions) {
     return new Promise((resolve, reject) => {
-        file.writeFile(subscriptionsFile, JSON.stringify(subscriptions), {flag: 'w+' }, (err) => {
+        file.writeFile(subscriptionsFile, JSON.stringify(subscriptions), { flag: 'w+' }, (err) => {
             if (err) {
-                console.log('Cannot write subscriptions: ' + err.message);     
+                console.log('Cannot write subscriptions: ' + err.message);
                 reject();
             }
-            
-            resolve();                
+
+            resolve();
         });
     });
 }
 
 function checkSubscription(subscriptions, subscriptionObject) {
     return subscriptions.findIndex(sub => sub.endpoint === subscriptionObject.endpoint) >= 0;
-} 
+}
 
 function removeSubscription(endpoint) {
-    getAllSubscriptions().then((data) => {        
+    getAllSubscriptions().then((data) => {
         let subscriptions = data;
 
         subscriptions = subscriptions.filter(el => el.endpoint !== endpoint);
         return saveSubscription(subscriptions)
     })
-    .catch();
+        .catch();
 }
 
 function push(title, msg, type) {
     let icon = getIcon(type);
     getAllSubscriptions().then((subscriptions) => {
         subscriptions.forEach(subscriber => {
-        webpush.sendNotification(
-            subscriber,
-            JSON.stringify({
-                "notification": {
-                    "title": title,
-                    "body": msg,
-                    "icon": icon,
-                    "vibrate": [100, 50, 100],
-                    "data": {
-                        "dateOfArrival": Date.now(),
-                        "primaryKey": 1
-                    }    
-                }
-            }),
+            webpush.sendNotification(
+                subscriber,
+                JSON.stringify({
+                    "notification": {
+                        "title": title,
+                        "body": msg,
+                        "icon": icon,
+                        "vibrate": [100, 50, 100],
+                        "data": {
+                            "dateOfArrival": Date.now(),
+                            "primaryKey": 1
+                        }
+                    }
+                }),
                 pushOptions)
                 .then(() => {
                     //console.log(`Sending to ${subscriber.endpoint}...`);
                 }).catch((err) => {
                     console.log('Error while pushing to [' + subscriber.endpoint + '] endpoint will be removed from subscribers list');
                     removeSubscription(subscriber.endpoint);
-            });
+                });
         });
     });
 }
@@ -188,7 +299,7 @@ const server = app.listen(port, function () {
     scheduler.schedule(2018, 2, 16, 10, 30, 0, () => push("Architects- and Software Engineers Summit 2018", "Lunch time", "lunch"));
     scheduler.schedule(2018, 2, 16, 14, 45, 0, () => push("Architects- and Software Engineers Summit 2018", "Coffee Break", "coffee"));
     scheduler.schedule(2018, 2, 16, 17, 30, 0, () => push("Architects- and Software Engineers Summit 2018", "Time for dinner!", "lunch"));
-    
+
     scheduler.schedule(2018, 2, 17, 11, 0, 0, () => push("Architects- and Software Engineers Summit 2018", "Lunch time!", "lunch"));
 
     console.log('Example app listening at http://%s:%s', host, port);
