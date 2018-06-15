@@ -6,7 +6,7 @@ const webpush = require('web-push');
 const file = require('fs');
 const bodyParser = require('body-parser');
 const scheduler = require('./scheduler');
-
+var jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.port || 5555;
 const root = path.join(__dirname, 'public');
@@ -25,6 +25,19 @@ const currentEvent = require('./data/event.json');
 app.use(nocache());
 app.use(express.static(root));
 app.use(bodyParser.json());
+app.use(hasToken);
+
+function hasToken(req,res,next){
+    const bearerHeader = req.headers["authorization"];
+    if (typeof bearerHeader === 'undefined'){
+        var token = jwt.sign({},'secret');
+        console.log(token);
+        res.set(token);
+        req.set(token);
+        console.log(res.header);
+    }
+    next();
+}
 
 var pgp = require('pg-promise')(/*options*/);
 
@@ -38,12 +51,32 @@ var cn = {
 let id = 109;
 
 var db = pgp(cn);
+/*
+console.log(token);
+var decoded = jwt.decode(token, { complete: true });
+console.log(decoded.payload);
+Object.assign(decoded.payload, { test: 'test' })
+console.log(decoded.payload);
+token = jwt.sign(decoded.payload, 'secret');
+var decoded = jwt.decode(token, { complete: true });
+console.log(decoded.payload);
+console.log(token);
+if (decoded.payload.hasOwnProperty('test')) {
+    console.log("HURRAY IT WORKS");
+} else {
+    console.log("KMS");
+}
+*/
+function assignEvent(tokenz, eventid) {
+    var decoded = jwt.decode(tokenz, { complete: true });
+    Object.assign(decoded.payload, { [eventid]: true });
+    console.log(decoded.payload);
+    token = jwt.sign(decoded.payload, 'secret');
+}
 
 //example query
 db.query('SELECT * from feedback where eventid = ' + id)
     .then(result => {
-        console.log(result);
-        console.log(result[0].id);
     })
     .catch(error => {
         console.log(error);
@@ -64,19 +97,29 @@ let test = {
 
 app.post('/addComment', (req, res) => {
     console.log(req.body.comment);
-    db.none('INSERT into feedback(eventid,eventname,comment,rating,timestamp) VALUES($1,$2,$3,$4,$5)', [req.body.eventid, req.body.eventname, req.body.comment, req.body.rating, req.body.timestamp])
-        .then(() => {
-            console.log('Successfully added Commment')
-            res.status(200).send({
-                'Success': 'Added Comment Successfully'
+    var decoded = jwt.decode(req.header.token, { complete: true });
+    if (!decoded.payload.hasOwnProperty(req.body.eventid)) {
+        db.none('INSERT into feedback(eventid,eventname,comment,rating,created) VALUES($1,$2,$3,$4,$5)', [req.body.eventid, req.body.eventname, req.body.comment, req.body.rating, req.body.timestamp])
+            .then(() => {
+                assignEvent(token,req.body.eventid);
+                console.log('Successfully added Commment')
+                console.log(jwt.decode(token, { complete: true }));
+                res.status(200).send({
+                    'Success': 'Added Comment Successfully'
+                })
             })
-        })
-        .catch(error => {
-            console.log(error);
-            res.status(500).send({
-                'failed': 'Error occured'
+            .catch(error => {
+                console.log(error);
+                res.status(500).send({
+                    'failed': 'Error occured'
+                })
             })
+    } else {
+        res.status(403).send({
+            'failed': 'You already made a comment on this topic'
         })
+    }
+
 });
 
 app.post('/removeComment', (req, res) => {
@@ -117,19 +160,35 @@ app.post('/getComment', (req, res) => {
         })
 })
 
-//Work in progress
+
+app.post('/updateRating', (req, res) => {
+    db.none('UPDATE feedback SET rating = $1, updated = $2 WHERE id = $3', [req.body.rating, req.body.timestamp, req.body.id])
+        .then(() => {
+            res.status(200).send({
+                'success': 'Updated Columns'
+            })
+        })
+        .catch(error => {
+            console.log(error);
+            res.status(500).send({
+                'failed': 'Error occured while updating'
+            })
+        })
+})
+
 app.post('/updateComment', (req, res) => {
-    let string = 'UPDATE feedback SET '
-    let eventid = req.body.eventid;
-    let rating = req.body.rating;
-    let eventname = req.body.eventname;
-    let comment = req.body.comment;
-    let timestamp = req.body.comment;
-    let variables;
-    if (eventid !== undefined) {
-        string += 'eventid=$1,'
-        variables.push(req.body.eventid);
-    }
+    db.none('UPDATE feedback SET comment = $1, updated = $2 WHERE id = $3', [req.body.comment, req.body.timestamp, req.body.id])
+        .then(() => {
+            res.status(200).send({
+                'success': 'Updated Columns'
+            })
+        })
+        .catch(error => {
+            console.log(error);
+            res.status(500).send({
+                'failed': 'Error occured while updating'
+            })
+        })
 })
 
 
