@@ -12,6 +12,13 @@ const port = process.env.port || 5555;
 const root = path.join(__dirname, 'public');
 const subscriptionsFile = path.join(__dirname, 'subscriptions', 'subscriptions.json');
 const util = require('./util.js');
+const Sequelize = require('sequelize');
+const sequelize = new Sequelize('postgres', 'postgres', 'root', {
+    host: 'localhost',
+    port: 5432,
+    dialect: 'postgres',
+    operatorsAliases: false,
+});
 
 const pushOptions = {
     vapidDetails: {
@@ -23,29 +30,98 @@ const pushOptions = {
 }
 const currentEvent = require('./data/event.json');
 
+const User = sequelize.define('user', {
+    id: {
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    }
+})
+
+const Feedback = sequelize.define('feedback', {
+    eventid: Sequelize.INTEGER,
+    comment: Sequelize.STRING,
+    rating: Sequelize.INTEGER,
+    eventname: Sequelize.STRING,
+    /* created_at:{
+         type: Sequelize.DATE(3),
+             defaultValue: Sequelize.literal('CURRENT_TIMESTAMP(3)')},*/
+    id: {
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+    userId: {
+        type: Sequelize.INTEGER,
+        references: {
+            model: 'users', // 'persons' refers to table name
+            key: 'id', // 'id' refers to column name in persons table
+        }
+    }
+    /*updated_at: {
+        type: Sequelize.DATE(3),
+            defaultValue: Sequelize.literal('CURRENT_TIMESTAMP(3)'),
+    },*/
+
+
+});
+
+
+User.sync({ force: true }).then(() => {
+    // Table created
+    return User.id;
+});
+
+
+Feedback.sync({ force: true }).then(() => {
+    // Table created
+    console.log("Table created");
+});
+
+User.hasOne(Feedback);
+
 app.use(nocache());
 app.use(express.static(root));
 app.use(bodyParser.json());
 app.use(hasToken);
 //app.use(verifyToken);
 
+
+sequelize
+    .authenticate()
+    .then(() => {
+        console.log('Connection has been established successfully.');
+    })
+    .catch(err => {
+        console.error('Unable to connect to the database:', err);
+    });
+
 function hasToken(request, response, next) {
     console.log('1. Middleware');
     const bearerHeader = request.headers['x-access-token'];
     console.log(bearerHeader);
     if (typeof bearerHeader === 'undefined') {
-        var token = jwt.sign({Commentids: []}, util.secret);
-        console.log(token);
-        //response.send({ token: token });
-        response.set("token", token);
-        request.headers['x-access-token'] = token;
-        console.log(request.headers['x-access-token']);
-        //response.set(token);
+        User
+            .build()
+            .save()
+            .then(myuser => {
+                var token = jwt.sign({ userid: myuser.id }, util.secret);
+                console.log(token);
+                //response.send({ token: token });
+                console.log("vor settoken");
+                response.set("token", token);
+                request.headers['x-access-token'] = token;
+                console.log(request.headers['x-access-token']);
+                console.log("1. Middleware done");
+                //response.set(token);
+                next();
+            });
     }
     else {
         console.log("Token found");
+        next();
     }
-    next();
+    //next();
 }
 /*
 function verifyToken(request, response, next) {
@@ -108,7 +184,7 @@ function assignPayload(oldToken, payload) {
     return jwt.sign(decoded.payload, util.secret);
 }
 
-//example query
+/*example query
 db.query('SELECT * from feedback where eventid = ' + id)
     .then(result => {
     })
@@ -118,7 +194,7 @@ db.query('SELECT * from feedback where eventid = ' + id)
 let test = {
     "id": 130
 }
-
+*/
 
 /*db.none('INSERT INTO feedback(id,eventname) VALUES($1,$2)', [188,'niceEvent9000'])
 .then(() => {
@@ -135,17 +211,26 @@ app.post('/addComment', (request, response) => {
     console.log(' Das Token' + token);
     if (!token) return response.status(401).send({ auth: false, message: 'No token provided.' });
     var decoded = jwt.decode(token, { complete: true });
+
+    console.log("Userid: " + decoded.payload.userid);
     if (!decoded.payload.hasOwnProperty(request.body.eventid)) {
-        db.none('INSERT into feedback(eventid,eventname,comment,rating,created) VALUES($1,$2,$3,$4,$5)', [request.body.eventid, request.body.eventname, request.body.comment, request.body.rating, request.body.created])
-            .then(() => {
+        request.body.userid = decoded.payload.userid;
+        Feedback
+            .build({
+                eventid: request.body.eventid,
+                eventname: request.body.eventname,
+                comment: request.body.comment,
+                rating: request.body.rating,
+                userId: request.body.userid
+            })
+            .save()
+            .then(myFeedback => {
                 let payload = {
                     [request.body.eventid]: true,
                 }
                 let payloadToken = assignPayload(token, payload);
-
                 console.log(jwt.decode(payloadToken, { complete: true }));
                 console.log('Successfully added Commment')
-
                 response.status(200).send({
                     'Success': 'Added Comment Successfully',
                     token: payloadToken
@@ -171,10 +256,18 @@ app.post('/removeComment', (request, response) => {
     console.log(' Das Token' + token);
     if (!token) return response.status(401).send({ auth: false, message: 'No token provided.' });
     var decoded = jwt.decode(token, { complete: true });
+    console.log("Check content of jwt: " + decoded.payload.hasOwnProperty(request.body.eventid));
     if (decoded.payload.hasOwnProperty(request.body.eventid)) {
-        db.none('DELETE from feedback WHERE id = $1', [request.body.id])
-            .then(() => {
-                console.log("Successfully removed the comment with id: " + request.body.id);
+        request.body.userid = decoded.payload.userid;
+        console.log(decoded.payload.userid);
+        Feedback.destroy({
+            where: {
+                eventid: request.body.eventid,
+                userId: request.body.userid
+            }
+        }).then(function (rowDeleted) { // rowDeleted will return number of rows deleted
+            if (rowDeleted === 1) {
+                console.log('Deleted successfully');
                 let res = Object.assign({}, decoded);
                 delete res[request.body.eventid];
                 let newToken = jwt.sign(res.payload, util.secret);
@@ -183,46 +276,53 @@ app.post('/removeComment', (request, response) => {
                     'success': 'Deleted Feedback',
                     'token': newToken
                 })
-            })
-            .catch(error => {
+            }
+        },
+            function (error) {
                 console.log(error);
                 response.status(500).send({
                     'failed': 'Error occured for this deletion'
                 })
-            })
+            });
     } else {
         response.status(403).send({
-            'failed': 'Can only delete your own comments',
+            'failed': 'You can only delete your own feedback',
             'token': token
         })
     }
-
-})
+});
 
 app.post('/getComment', (request, response) => {
-    db.any('SELECT * FROM feedback where eventid =$1 AND eventname = $2', [request.body.eventid, request.body.eventname])
-        .then(function (data) {
-            console.log(request.body.eventid);
-            console.log(request.body.eventname);
-            console.log(data);
-            if (data.length > 0)
-                response.status(200).send(data, {
-                    'token': token
-                });
-            else {
-                response.status(404).send({
-                    'failed': 'No matching comments',
-                    'token': token
-                })
-            }
-        })
-        .catch(error => {
-            response.status(500).send({
-                'failed': 'Error occured while fetching',
+    var token = request.body.token || request.query.token || request.headers['x-access-token'];
+    Feedback.findAll({
+        where: {
+            eventid: request.body.eventid,
+            eventname: request.body.eventname
+        }
+    }).then(feedbacks => {
+        if (feedbacks.length > 0) {
+            response.status(200);
+            response.send({
+                'success': feedbacks,
+                'token': token
+            });
+        } else {
+            response.status(404).send({
+                'failed': 'No matching comments',
                 'token': token
             })
+        }
+    }).catch(error => {
+        console.log(error);
+        response.status(500).send({
+            'failed': 'Error occured while fetching',
+            'token': token
         })
-})
+    })
+});
+
+
+
 
 
 app.post('/updateRating', (request, response) => {
@@ -231,20 +331,26 @@ app.post('/updateRating', (request, response) => {
     if (!token) return response.status(401).send({ auth: false, message: 'No token provided.' });
     var decoded = jwt.decode(token, { complete: true });
     if (decoded.payload.hasOwnProperty(request.body.eventid)) {
-        db.none('UPDATE feedback SET rating = $1, updated = $2 WHERE id = $3', [request.body.rating, request.body.timestamp, request.body.id])
-            .then(() => {
+        Feedback.update({
+            rating: request.body.rating
+        },
+            {
+                where: { id: request.body.id }
+            }
+        )
+            .then(function (result) {
                 response.status(200).send({
-                    'success': 'Updated Columns',
+                    'success': 'Rating updated',
                     'token': token
                 })
-            })
-            .catch(error => {
+            }).catch(error => {
                 console.log(error);
                 response.status(500).send({
                     'failed': 'Error occured while updating',
                     'token': token
                 })
             })
+
     } else {
         response.status(403).send({
             'failed': 'You can only edit your own ratings',
@@ -260,24 +366,30 @@ app.post('/updateComment', (request, response) => {
     if (!token) return response.status(401).send({ auth: false, message: 'No token provided.' });
     var decoded = jwt.decode(token, { complete: true });
     if (decoded.payload.hasOwnProperty(request.body.eventid)) {
-        db.none('UPDATE feedback SET comment = $1, updated = $2 WHERE id = $3', [request.body.comment, request.body.timestamp, request.body.id])
-            .then(() => {
+        Feedback.update({
+            comment: request.body.comment
+        },
+            {
+                where: { id: request.body.id }
+            }
+        )
+            .then(function (result) {
                 response.status(200).send({
-                    'success': 'Updated Columns',
+                    'success': 'Comment updated',
                     'token': token
                 })
-            })
-            .catch(error => {
+            }).catch(error => {
                 console.log(error);
                 response.status(500).send({
                     'failed': 'Error occured while updating',
                     'token': token
                 })
             })
-    }else {
+
+    } else {
         response.status(403).send({
-            'failed' : 'You can only edit your own Comments',
-            'token' : token
+            'failed': 'You can only edit your own comments',
+            'token': token
         })
     }
 
