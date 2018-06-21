@@ -6,6 +6,10 @@ const sequelize = new Sequelize('postgres', 'postgres', 'root', {
     operatorsAliases: false,
 });
 
+/**
+ * This defines the user table with its attributes
+ * 
+ */
 const User = sequelize.define('user', {
     id: {
         type: Sequelize.INTEGER,
@@ -14,6 +18,9 @@ const User = sequelize.define('user', {
     }
 })
 
+/**
+ * This define the Feedback table with its attributes
+ */
 const Feedback = sequelize.define('feedback', {
     eventid: Sequelize.INTEGER,
     comment: Sequelize.STRING,
@@ -27,14 +34,14 @@ const Feedback = sequelize.define('feedback', {
     userId: {
         type: Sequelize.INTEGER,
         references: {
-            model: 'users', 
-            key: 'id', 
+            model: 'users',
+            key: 'id',
         }
     }
 });
 
 module.exports = {
-Feedback : Feedback,
-User : User,
-sequelize : sequelize,
+    Feedback: Feedback,
+    User: User,
+    sequelize: sequelize,
 };

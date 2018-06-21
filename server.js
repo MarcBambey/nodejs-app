@@ -11,7 +11,7 @@ const port = process.env.port || 5555;
 const root = path.join(__dirname, 'public');
 const subscriptionsFile = path.join(__dirname, 'subscriptions', 'subscriptions.json');
 const database = require('./database/database');
-const hasTokenMiddleware = require ('./routing/middlewares/hastokenmiddleware.js');
+const hasTokenMiddleware = require('./routing/middlewares/hastokenmiddleware.js');
 const routes = require('./routing/route.js');
 const pushOptions = {
     vapidDetails: {
@@ -22,7 +22,6 @@ const pushOptions = {
     TTL: 60 * 60
 }
 const currentEvent = require('./data/event.json');
-
 
 app.use(nocache());
 app.use(express.static(root));

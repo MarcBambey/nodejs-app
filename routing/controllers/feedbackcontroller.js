@@ -3,21 +3,41 @@ const databasemodels = require('../../database/databasemodels.js');
 const Feedback = databasemodels.Feedback;
 const util = require('../../util.js');
 
+/**
+ *This function assigns a payload to a jwt token and returns the new token.
+ *
+ * @param {*} oldToken The currentToken of the user
+ * @param {*} payload The payload that will be assigned to the token
+ * @returns The new signed token with the new payload
+ */
 function assignPayload(oldToken, payload) {
     var decoded = jwt.decode(oldToken, { complete: true });
     Object.assign(decoded.payload, payload);
     return jwt.sign(decoded.payload, util.secret);
 }
-
+/**
+ * The feedbackController object
+ */
 let feedbackController = {};
 
+/**
+ * This function checks if a token is sent and if not returns an errormessage
+ * The token gets decoded and its paylod is checked for the eventid to make sure
+ * the user can't post 2 feedbacks on the same event.
+ * The new Feedback is written to the database
+ *  A new token is generated with updated information regarding the users feedbacks
+ * On success a success message and the new token is returned in the response.
+ * On a database failure it returns an error message.
+ * On an attempt of a duplicate comment it returns another error message accordingly.
+ * @param {*} request the request
+ * @param {*} response the response that will be send
+ */
 feedbackController.postFeedback = function (request, response) {
     console.log("Comment: " + request.body.comment);
     var token = request.body.token || request.query.token || request.headers['x-access-token'];
     console.log(' Das Token' + token);
     if (!token) return response.status(401).send({ auth: false, message: 'No token provided.' });
     var decoded = jwt.decode(token, { complete: true });
-
     console.log("Userid: " + decoded.payload.userid);
     if (!decoded.payload.hasOwnProperty(request.body.eventid)) {
         request.body.userid = decoded.payload.userid;
@@ -56,6 +76,17 @@ feedbackController.postFeedback = function (request, response) {
 
 };
 
+/**
+ * This function checks if a token is sent and if not returns an errormessage
+ * The token gets decoded and the payloads content is checked on whether the user has
+ * made a Feedback on the event he wants to delete from.
+ * If not an error message is returned.
+ * The feedback matching the eventid and the userId is getting removed from the database.
+ * A new token with updated information is created and send in the response together with a success message.
+ * On database error an error message is returned.
+ * @param {*} request The request
+ * @param {*} response The response
+ */
 feedbackController.deleteFeedback = function (request, response) {
     console.log(request.body.id);
     var token = request.body.token || request.query.token || request.headers['x-access-token'];
@@ -71,7 +102,7 @@ feedbackController.deleteFeedback = function (request, response) {
                 eventid: request.body.eventid,
                 userId: request.body.userid
             }
-        }).then(function (rowDeleted) { // rowDeleted will return number of rows deleted
+        }).then(function (rowDeleted) {
             if (rowDeleted === 1) {
                 console.log('Deleted successfully');
                 let res = Object.assign({}, decoded);
@@ -98,7 +129,14 @@ feedbackController.deleteFeedback = function (request, response) {
     }
 }
 
-feedbackController.getFeedback = function(request, response){
+/**
+ * This function finds all Feedback entries that match the search criterias in the request body.
+ * It returns a success message and the found feedbacks in the response
+ * If no matches are found or a database error occurs a error message is returned instead.
+ * @param {*} request The request
+ * @param {*} response The response
+ */
+feedbackController.getFeedback = function (request, response) {
     var token = request.body.token || request.query.token || request.headers['x-access-token'];
     Feedback.findAll({
         where: {
@@ -127,7 +165,16 @@ feedbackController.getFeedback = function(request, response){
     })
 };
 
-feedbackController.updateRating = function(request,response){
+/** 
+ * This function checks if a token is sent and if not returns an errormessage
+ * The token gets decoded and the payloads content is checked on whether the user has
+ * made a Feedback on the event he wants to update.
+ * If there is no match in the token a error message is returned.
+ * The matching database entry gets their rating updated.
+ * If a databse error occurs an apporpriate error is returned.
+ * On success a success message is returned.
+*/
+feedbackController.updateRating = function (request, response) {
     var token = request.body.token || request.query.token || request.headers['x-access-token'];
     console.log(' Das Token' + token);
     if (!token) return response.status(401).send({ auth: false, message: 'No token provided.' });
@@ -162,7 +209,16 @@ feedbackController.updateRating = function(request,response){
 
 }
 
-feedbackController.updateComment = function(request,response){
+/** 
+ * This function checks if a token is sent and if not returns an errormessage
+ * The token gets decoded and the payloads content is checked on whether the user has
+ * made a Feedback on the event he wants to update.
+ * If there is no match in the token a error message is returned.
+ * The matching database entry gets their comment updated.
+ * If a databse error occurs an apporpriate error is returned.
+ * On success a success message is returned.
+*/
+feedbackController.updateComment = function (request, response) {
     var token = request.body.token || request.query.token || request.headers['x-access-token'];
     console.log(' Das Token' + token);
     if (!token) return response.status(401).send({ auth: false, message: 'No token provided.' });
@@ -198,6 +254,4 @@ feedbackController.updateComment = function(request,response){
 };
 
 
-module.exports = {
-    feedbackController: feedbackController,
-}
+module.exports = feedbackController;
