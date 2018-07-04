@@ -13,6 +13,9 @@ const subscriptionsFile = path.join(__dirname, 'subscriptions', 'subscriptions.j
 const database = require('./database/database');
 const hasTokenMiddleware = require('./routing/middlewares/hastokenmiddleware.js');
 const routes = require('./routing/route.js');
+const databasemodels = require('./database/databasemodels');
+const Feedback = databasemodels.Feedback;
+const feedbackController = require ('./routing/controllers/feedbackcontroller');
 const pushOptions = {
     vapidDetails: {
         subject: 'http://www.google.com',
@@ -27,14 +30,15 @@ app.use(nocache());
 app.use(express.static(root));
 app.use(bodyParser.json());
 app.use(hasTokenMiddleware.hasToken);
+app.use("/api", routes.loadRoutes(express));
 
 database.initiateDatabase();
-routes.loadRoutes(app);
 
 // DIAGNOSTICS
 app.get('/api/event', function (request, response) {
     response.json(currentEvent);
 });
+
 
 app.get('/say-hello', function (request, response) {
     response.send('Hello World!');

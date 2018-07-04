@@ -1,4 +1,4 @@
-const databasemodels = require ('../../database/databasemodels.js');
+const databasemodels = require('../../database/databasemodels.js');
 const User = databasemodels.User;
 var jwt = require('jsonwebtoken');
 const util = require('../../util.js');
@@ -22,19 +22,18 @@ function hasToken(request, response, next) {
                 var token = jwt.sign({ userid: myuser.id }, util.secret);
                 console.log("This is myuser: " + myuser);
                 console.log(token);
-                //response.send({ token: token });
                 console.log("vor settoken");
-                response.set("token", token);
+                request.token = jwt.decode(token, {complete: true});
                 request.headers['x-access-token'] = token;
-                response.setHeader('Access-Control-Expose-Headers', 'x-access-token' );
+                response.setHeader('Access-Control-Expose-Headers', 'x-access-token');
                 console.log(request.headers['x-access-token']);
                 console.log("1. Middleware done");
-                //response.set(token);
                 next();
             });
     }
     else {
         console.log("Token found");
+        request.token  = jwt.decode(bearerHeader, { complete: true });
         next();
     }
     //next();
