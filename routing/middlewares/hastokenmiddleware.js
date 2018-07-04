@@ -20,11 +20,13 @@ function hasToken(request, response, next) {
             .save()
             .then(myuser => {
                 var token = jwt.sign({ userid: myuser.id }, util.secret);
+                console.log("This is myuser: " + myuser);
                 console.log(token);
                 //response.send({ token: token });
                 console.log("vor settoken");
                 response.set("token", token);
                 request.headers['x-access-token'] = token;
+                response.setHeader('Access-Control-Expose-Headers', 'x-access-token' );
                 console.log(request.headers['x-access-token']);
                 console.log("1. Middleware done");
                 //response.set(token);

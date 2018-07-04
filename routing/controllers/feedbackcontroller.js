@@ -10,10 +10,11 @@ const util = require('../../util.js');
  * @param {*} payload The payload that will be assigned to the token
  * @returns The new signed token with the new payload
  */
-function assignPayload(oldToken, payload) {
+function assignPayload(oldToken, payload, response) {
     var decoded = jwt.decode(oldToken, { complete: true });
     Object.assign(decoded.payload, payload);
-    return jwt.sign(decoded.payload, util.secret);
+    response.setHeader('x-access-token', jwt.sign(decoded.payload, util.secret));
+    response.setHeader('Access-Control-Expose-Headers', 'x-access-token' )
 }
 /**
  * The feedbackController object
@@ -54,23 +55,27 @@ feedbackController.postFeedback = function (request, response) {
                 let payload = {
                     [request.body.eventid]: true,
                 }
-                let payloadToken = assignPayload(token, payload);
-                console.log(jwt.decode(payloadToken, { complete: true }));
+                assignPayload(token, payload, response);
+                console.log("Token after assign: " + token);
                 console.log('Successfully added Commment')
                 response.status(200).send({
                     'Success': 'Added Comment Successfully',
-                    token: payloadToken
+
                 })
             })
             .catch(error => {
                 console.log(error);
+                response.setHeader('x-access-token', token)
                 response.status(500).send({
-                    'failed': 'Error occured'
+                    'failed': 'Error occured',
+
                 })
             })
     } else {
+        response.setHeader('x-access-token', token)
         response.status(403).send({
-            'failed': 'You already made a comment on this topic'
+            'failed': 'You already made a comment on this topic',
+
         })
     }
 
@@ -108,10 +113,12 @@ feedbackController.deleteFeedback = function (request, response) {
                 let res = Object.assign({}, decoded);
                 delete res[request.body.eventid];
                 let newToken = jwt.sign(res.payload, util.secret);
+                response.setHeader('x-acces-token', newToken);
+                response.setHeader('Access-Control-Expose-Headers', 'x-access-token' )
                 console.log("removeComment Token: " + jwt.decode(newToken, { complete: true }))
                 response.status(200).send({
                     'success': 'Deleted Feedback',
-                    'token': newToken
+
                 })
             }
         },
@@ -124,7 +131,7 @@ feedbackController.deleteFeedback = function (request, response) {
     } else {
         response.status(403).send({
             'failed': 'You can only delete your own feedback',
-            'token': token
+
         })
     }
 }
@@ -137,7 +144,10 @@ feedbackController.deleteFeedback = function (request, response) {
  * @param {*} response The response
  */
 feedbackController.getFeedback = function (request, response) {
+    console.log("In GetFeedback");
     var token = request.body.token || request.query.token || request.headers['x-access-token'];
+    response.setHeader('x-access-token', token);
+    response.setHeader('Access-Control-Expose-Headers', 'x-access-token' )
     Feedback.findAll({
         where: {
             eventid: request.body.eventid,
@@ -148,19 +158,19 @@ feedbackController.getFeedback = function (request, response) {
             response.status(200);
             response.send({
                 'success': feedbacks,
-                'token': token
+
             });
         } else {
             response.status(404).send({
                 'failed': 'No matching comments',
-                'token': token
+
             })
         }
     }).catch(error => {
         console.log(error);
         response.status(500).send({
             'failed': 'Error occured while fetching',
-            'token': token
+
         })
     })
 };
@@ -177,6 +187,8 @@ feedbackController.getFeedback = function (request, response) {
 feedbackController.updateRating = function (request, response) {
     var token = request.body.token || request.query.token || request.headers['x-access-token'];
     console.log(' Das Token' + token);
+    response.setHeader('x-access-token', token);
+    response.setHeader('Access-Control-Expose-Headers', 'x-access-token' )
     if (!token) return response.status(401).send({ auth: false, message: 'No token provided.' });
     var decoded = jwt.decode(token, { complete: true });
     if (decoded.payload.hasOwnProperty(request.body.eventid)) {
@@ -190,20 +202,20 @@ feedbackController.updateRating = function (request, response) {
             .then(function (result) {
                 response.status(200).send({
                     'success': 'Rating updated',
-                    'token': token
+                    
                 })
             }).catch(error => {
                 console.log(error);
                 response.status(500).send({
                     'failed': 'Error occured while updating',
-                    'token': token
+                    
                 })
             })
 
     } else {
         response.status(403).send({
             'failed': 'You can only edit your own ratings',
-            'token': token
+            
         })
     }
 
@@ -220,6 +232,8 @@ feedbackController.updateRating = function (request, response) {
 */
 feedbackController.updateComment = function (request, response) {
     var token = request.body.token || request.query.token || request.headers['x-access-token'];
+    response.setHeader('x-access-token', token);
+    response.setHeader('Access-Control-Expose-Headers', 'x-access-token' )
     console.log(' Das Token' + token);
     if (!token) return response.status(401).send({ auth: false, message: 'No token provided.' });
     var decoded = jwt.decode(token, { complete: true });
@@ -234,20 +248,20 @@ feedbackController.updateComment = function (request, response) {
             .then(function (result) {
                 response.status(200).send({
                     'success': 'Comment updated',
-                    'token': token
+                    
                 })
             }).catch(error => {
                 console.log(error);
                 response.status(500).send({
                     'failed': 'Error occured while updating',
-                    'token': token
+                    
                 })
             })
 
     } else {
         response.status(403).send({
             'failed': 'You can only edit your own comments',
-            'token': token
+            
         })
     }
 
