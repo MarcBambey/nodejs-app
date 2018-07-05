@@ -22,7 +22,7 @@ let feedbackController = {};
  * @param {*} response the response that will be send
  */
 feedbackController.postFeedback = function (request, response) {
-    if (!request.token.hasOwnProperty(request.body.eventid)) {
+    if (!request.token.payload.hasOwnProperty(request.body.eventid)) {
         request.body.userid = request.token.payload.userid;
         Feedback
             .build({
