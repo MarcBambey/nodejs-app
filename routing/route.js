@@ -6,7 +6,7 @@ const feedbackController = require('./controllers/feedbackcontroller');
 let routes = [
     { method: "post", uri: "/events/:id/feedback", controller: feedbackController.postFeedback },
     { method: "delete", uri: "/events/:id/feedback/:feedbackid", controller: feedbackController.deleteFeedback },
-    { method: "get", uri: "/events/:id/feedbacks", controller: feedbackController.getFeedback },
+    { method: "get", uri: "/events/feedbacks", controller: feedbackController.getFeedback },
     { method: "put", uri: "/events/:id/feedback/:feedbackid/rating", controller: feedbackController.updateRating },
     { method: "put", uri: "/events/:id/feedback/:feedbackid/comment", controller: feedbackController.updateComment },
     

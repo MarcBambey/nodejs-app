@@ -101,13 +101,10 @@ feedbackController.deleteFeedback = (request, response) => {
  * @param {*} request The request
  * @param {*} response The response
  */
-feedbackController.getFeedback = function (request, response) {
+feedbackController.getFeedback = function (request,response) {
     console.log("In GetFeedback");
-    Feedback.findAll({
-        where: {
-            eventid: request.params.id,
-        }
-    }).then(feedbacks => {
+    Feedback.findAll()
+    .then(feedbacks => {
         if (feedbacks.length > 0) {
             response.status(200);
             response.send({
