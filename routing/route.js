@@ -9,7 +9,8 @@ let routes = [
     { method: "get", uri: "/events/feedbacks", controller: feedbackController.getFeedback },
     { method: "put", uri: "/events/:id/feedback/:feedbackid/rating", controller: feedbackController.updateRating },
     { method: "put", uri: "/events/:id/feedback/:feedbackid/comment", controller: feedbackController.updateComment },
-    
+    { method: "get", uri: "/events/userdata", controller: feedbackController.getUserData },
+
 ];
 /**
  *This function loads all the routes used.
@@ -20,7 +21,7 @@ function loadRoutes(express) {
     for (let route of routes) {
         router[route.method](route.uri, route.controller)
     }
-     return router;
+    return router;
 }
 
 module.exports = {

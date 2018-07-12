@@ -55,7 +55,11 @@ feedbackController.postFeedback = function (request, response) {
     }
 };
 
-
+feedbackController.getUserData =  (request, response)  => {
+response.status(200).send({
+'payload' : request.token.payload,
+})    
+};
 
 /**
  * This function checks if a token is sent and if not returns an errormessage
