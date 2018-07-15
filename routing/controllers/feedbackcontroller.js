@@ -40,6 +40,7 @@ feedbackController.postFeedback = function (request, response) {
                 util.assignPayload(payload, request, response);
                 response.status(200).send({
                     'Success': 'Added Comment Successfully',
+                    'feedback': myFeedback,
                 })
             })
             .catch(error => {
