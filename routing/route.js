@@ -1,4 +1,5 @@
 const feedbackController = require('./controllers/feedbackcontroller');
+const passwordController = require ('./controllers/passwordcontroller');
 
 /** 
  * Defines the routes used
@@ -10,6 +11,8 @@ let routes = [
     { method: "put", uri: "/events/:id/feedback/:feedbackid/rating", controller: feedbackController.updateRating },
     { method: "put", uri: "/events/:id/feedback/:feedbackid/comment", controller: feedbackController.updateComment },
     { method: "get", uri: "/events/userdata", controller: feedbackController.getUserData },
+    {method: "get", uri: "/events/password", controller: passwordController.confirmTokenPassword},
+    {method: "post", uri: "/events/password", controller: passwordController.checkPassword},
 
 ];
 /**
