@@ -17,6 +17,7 @@
             "endTime": "10:00",
             "name": "Registration & Coffee",
             "isBreak": true
+            
           },
           {
             "id": 102,
@@ -25,7 +26,8 @@
             "name": "Welcome + Organisation",
             "presenters": [1, 2],
             "room": "Plenum",
-            "isBreak": false
+            "isBreak": false,
+            "downloadurl": "https://www.capgemini.com/"
           },
           {
             "id": 103,
@@ -34,7 +36,9 @@
             "name": "Hybrid Communities",
             "presenters": [1],
             "room": "Plenum",
-            "isBreak": false
+            "isBreak": false,
+            "downloadurl": "https://www.mmo-champion.com/content/"
+
           },
           {
             "id": 104,
