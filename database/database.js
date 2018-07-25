@@ -9,9 +9,9 @@ const Feedback = databasemodels.Feedback;
  *
  */
 function initiateDatabase() {
-    User.sync({ force: true }).then(() => {
+    User.sync({ force: false }).then(() => {
     });
-    Feedback.sync({ force: true }).then(() => {
+    Feedback.sync({ force: false }).then(() => {
         // Table created
         console.log("Table created");
     });
