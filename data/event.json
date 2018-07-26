@@ -37,7 +37,7 @@
             "presenters": [1],
             "room": "Plenum",
             "isBreak": false,
-            "downloadurl": "https://www.mmo-champion.com/content/"
+            "downloadurl": "https://troom.capgemini.com/sites/vcc/Shared%20Documents/CrossCuttingContent/ConferencesEvents/Events/APPSEvolveSummits/Summit2018/Conference/Hybrid%20Communities%20.pptx"
 
           },
           {
@@ -63,7 +63,8 @@
             "name": "Enhancing the reality - AR and VR in practice",
             "presenters": [5],
             "room": "Millenium 1+2",
-            "isBreak": false
+            "isBreak": false,
+            "downloadurl": "https://troom.capgemini.com/sites/vcc/Shared%20Documents/CrossCuttingContent/ConferencesEvents/Events/APPSEvolveSummits/Summit2018/Conference/Enhancing%20the%20Reality_Krystian%20Granatowski.pptx"
           },
           {
             "id": 107,
@@ -73,7 +74,8 @@
             "name": "State of and roadmap for iCSD / devonfw",
             "presenters": [9],
             "room": "Millenium 3",
-            "isBreak": false
+            "isBreak": false,
+            "downloadurl": "https://troom.capgemini.com/sites/vcc/Shared%20Documents/CrossCuttingContent/ConferencesEvents/Events/APPSEvolveSummits/Summit2018/Conference/StateofandRoadmapforiCSDanddevonfw_Iwan%20Rochus%20Van%20Der%20Kleijn.pptx"
           },
           {
             "id": 108,
@@ -83,7 +85,8 @@
             "name": "Specification in Agile Projects",
             "presenters": [15],
             "room": "Millenium 4",
-            "isBreak": false
+            "isBreak": false,
+            "downloadurl": "https://troom.capgemini.com/sites/vcc/Shared%20Documents/CrossCuttingContent/ConferencesEvents/Events/APPSEvolveSummits/Summit2018/Conference/2018-03-15_SpecificationAgileProjects_Jonathan%20Ufer.pptx"
           },
           {
             "id": 109,
@@ -93,7 +96,8 @@
             "name": "Data Science in Real Life",
             "presenters": [6],
             "room": "Millenium 1+2",
-            "isBreak": false
+            "isBreak": false,
+            "downloadurl": "https://troom.capgemini.com/sites/vcc/Shared%20Documents/CrossCuttingContent/ConferencesEvents/Events/APPSEvolveSummits/Summit2018/Conference/Communities%20Summit%20-%20Data%20Science%20in%20Real%20Life%20-%2020180228_Arek%20Maciejowski.pptx"
           },
           {
             "id": 110,
@@ -123,7 +127,8 @@
             "name": "Blockchain - Hype or Chance?",
             "presenters": [7],
             "room": "Millenium 1+2",
-            "isBreak": false
+            "isBreak": false,
+            "downloadurl":"https://troom.capgemini.com/sites/vcc/Shared%20Documents/CrossCuttingContent/ConferencesEvents/Events/APPSEvolveSummits/Summit2018/Conference/2018-03-15_ArchSummit_Blockchain_Jakob%20Boos.pptx"
           },
           {
             "id": 113,
@@ -133,7 +138,8 @@
             "name": "Devonfw and Production Line: A Success Story for Italian Projects",
             "presenters": [12],
             "room": "Millenium 3",
-            "isBreak": false
+            "isBreak": false,
+            "downloadurl": "https://troom.capgemini.com/sites/vcc/Shared%20Documents/CrossCuttingContent/ConferencesEvents/Events/APPSEvolveSummits/Summit2018/Conference/Italy-iCSD-SuccessStories_v7_Stefano%20Rossini.pptx"
           },
           {
             "id": 114,
@@ -160,7 +166,8 @@
             "name": "APIs & Microservices - Lessons learned using iPaaS @eprimo ",
             "presenters": [8],
             "room": "Millenium 1+2",
-            "isBreak": false
+            "isBreak": false,
+            "downloadurl":"https://troom.capgemini.com/sites/vcc/Shared%20Documents/CrossCuttingContent/ConferencesEvents/Events/APPSEvolveSummits/Summit2018/Conference/Architect%20Summit%202018_eprimo%20Microservices_v1_Martin%20Swientek.pptx"
           },
           {
             "id": 117,
@@ -170,7 +177,8 @@
             "name": "Test automation - Why do we do it better and faster than you?",
             "presenters": [13, 14],
             "room": "Millenium 3",
-            "isBreak": false
+            "isBreak": false,
+            "downloadurl": "https://troom.capgemini.com/sites/vcc/Shared%20Documents/CrossCuttingContent/ConferencesEvents/Events/APPSEvolveSummits/Summit2018/Conference/Why%20do%20we%20do%20it%20better%20and%20faster_3_4_EN__%C5%81ukasz%20Stefaniszyn_%C5%BBaneta%20Nawrot.pptx"
           },
           {
             "id": 118,
@@ -180,7 +188,8 @@
             "name": "Reactive Frontend Architecture with Angular ",
             "presenters": [19],
             "room": "Millenium 4",
-            "isBreak": false
+            "isBreak": false,
+            "downloadurl": "https://troom.capgemini.com/sites/vcc/Shared%20Documents/CrossCuttingContent/ConferencesEvents/Events/APPSEvolveSummits/Summit2018/Conference/Reactive%20Architecture%20with%20Angular_Philip%20Schm%C3%B6kel.pptx"
           },
           {
             "id": 119,
